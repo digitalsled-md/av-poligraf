@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { ArrowRight } from "lucide-react";
+import PrintCalculator from "@/components/calculator/PrintCalculator";
 
 export async function generateMetadata({
   params,
@@ -41,28 +42,40 @@ export default async function ServicesPage({
           <p className="mt-4 text-lg text-slate-600">{t("subtitle")}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {items.map((s) => (
-            <div
-              key={s.id}
-              className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 hover:shadow-lg transition-shadow"
-            >
-              <h2 className="text-xl font-semibold text-slate-900">{s.title}</h2>
-              <p className="mt-2 text-slate-600">{s.desc}</p>
-              <div className="mt-6 flex items-center justify-between">
-                <span className="text-sm font-semibold text-[var(--color-primary)]">
-                  {s.priceFrom}
-                </span>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {items.map((s) => (
                 <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] hover:underline"
+                  key={s.id}
+                  href={`/services/${s.id}`}
+                  className="group block bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 hover:border-[var(--color-accent)] hover:shadow-lg transition-all"
                 >
-                  {locale === "ru" ? "Заказать" : "Comandă"}
-                  <ArrowRight className="h-4 w-4" />
+                  <h2 className="text-xl font-semibold text-slate-900 group-hover:text-[var(--color-accent)] transition-colors">
+                    {s.title}
+                  </h2>
+                  <p className="mt-2 text-slate-600 text-sm leading-relaxed">
+                    {s.desc}
+                  </p>
+                  <div className="mt-5 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-[var(--color-primary)]">
+                      {s.priceFrom}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)]">
+                      {locale === "ru" ? "Подробнее" : "Detalii"}
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
                 </Link>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="sticky top-24">
+              <PrintCalculator />
+            </div>
+          </div>
         </div>
       </div>
     </div>
