@@ -1,0 +1,170 @@
+{
+  "meta": {
+    "homeTitle": "A&V Poligraf — Tipografie în Comrat | Tipar, design, bannere",
+    "homeDescription": "Tipografia A&V Poligraf din Comrat (Găgăuzia). Tipar digital și de format mare, cărți de vizită, bannere, design. Din 2008. Rapid și de calitate.",
+    "servicesTitle": "Servicii — A&V Poligraf Comrat",
+    "servicesDescription": "Gama completă de servicii poligrafice: cărți de vizită, broșuri, bannere, oracal, fototapet, laminare, broșurare.",
+    "portfolioTitle": "Portofoliu — A&V Poligraf",
+    "portfolioDescription": "Exemple de lucrări ale tipografiei A&V Poligraf: cărți de vizită, bannere, poligrafie pentru afaceri din Găgăuzia.",
+    "aboutTitle": "Despre companie — A&V Poligraf SRL",
+    "aboutDescription": "Tipografie în Comrat din 2008. Ciclu complet: design + tipar. Director Anatoli Tomaili.",
+    "contactTitle": "Contacte și solicitare — A&V Poligraf Comrat",
+    "contactDescription": "Contactați tipografia A&V Poligraf: +373 79 955 020, avpoligraf@gmail.com. Comrat, Găgăuzia."
+  },
+  "nav": {
+    "home": "Acasă",
+    "services": "Servicii",
+    "portfolio": "Portofoliu",
+    "about": "Despre noi",
+    "contact": "Contacte",
+    "getQuote": "Solicită ofertă",
+    "phone": "+373 79 955 020"
+  },
+  "hero": {
+    "title": "Tipografie cu ciclu complet în Comrat",
+    "subtitle": "Design + tipar din 2008. Cărți de vizită, bannere, poligrafie — rapid, de calitate și aproape.",
+    "ctaQuote": "Solicită ofertă",
+    "ctaWorks": "Vezi lucrările"
+  },
+  "advantages": {
+    "title": "De ce ne aleg",
+    "items": [
+      { "title": "Termene", "desc": "Tipar operativ — de la câteva ore până la 1–2 zile" },
+      { "title": "Localitate", "desc": "Suntem în Comrat. Convenabil pentru afacerile din Găgăuzia și sudul Moldovei" },
+      { "title": "Design + tipar", "desc": "Ciclu complet: de la machetă la produsul finit" },
+      { "title": "Calitate", "desc": "Echipament modern și control la fiecare etapă" },
+      { "title": "Experiență din 2008", "desc": "Peste 15 ani de lucru cu afaceri și organizații locale" },
+      { "title": "Ciclu complet", "desc": "Tipar, laminare, broșurare, tăiere, montaj" }
+    ]
+  },
+  "popularServices": {
+    "title": "Servicii populare",
+    "viewAll": "Toate serviciile"
+  },
+  "services": {
+    "title": "Serviciile noastre",
+    "subtitle": "Gama completă de servicii poligrafice pentru afaceri, școli și persoane private",
+    "items": [
+      {
+        "id": "business-cards",
+        "title": "Cărți de vizită",
+        "short": "Clasice, laminate, cu folie",
+        "desc": "Tipar cărți de vizită de orice complexitate: mate, lucioase, cu laminare, stamping. Termene rapide.",
+        "priceFrom": "de la 150 lei"
+      },
+      {
+        "id": "banners",
+        "title": "Bannere și format mare",
+        "short": "Bannere, plasă, oracal, fototapet",
+        "desc": "Tipar de format mare: bannere, oracal, fototapet, pânză. Montaj la cerere.",
+        "priceFrom": "de la 45 lei/m²"
+      },
+      {
+        "id": "flyers",
+        "title": "Pliante și broșuri",
+        "short": "Poligrafie publicitară",
+        "desc": "Pliante, flyere, broșuri, cataloage. Tipar color, pliere, broșurare.",
+        "priceFrom": "de la 0,8 lei/buc"
+      },
+      {
+        "id": "design",
+        "title": "Design și machete",
+        "short": "Identitate vizuală, machete",
+        "desc": "Dezvoltare design cărți de vizită, pliante, bannere, logo-uri. Pregătire pentru tipar.",
+        "priceFrom": "de la 300 lei"
+      },
+      {
+        "id": "laminating",
+        "title": "Laminare și broșurare",
+        "short": "Protecție și legare",
+        "desc": "Laminare documente, broșurare, legătură tare, rizograf.",
+        "priceFrom": "de la 5 lei"
+      },
+      {
+        "id": "canvas",
+        "title": "Pânză și interior",
+        "short": "Tipar pe pânză, fototapet",
+        "desc": "Tipar tablouri pe pânză, fototapet, grafică de interior de înaltă calitate.",
+        "priceFrom": "de la 350 lei"
+      }
+    ]
+  },
+  "portfolio": {
+    "title": "Portofoliu",
+    "subtitle": "Lucrări reale pentru afaceri și organizații din Găgăuzia",
+    "filters": {
+      "all": "Toate",
+      "cards": "Cărți de vizită",
+      "banners": "Bannere",
+      "print": "Poligrafie",
+      "design": "Design"
+    },
+    "items": [
+      { "id": 1, "title": "Cărți de vizită pentru cafenea", "category": "cards", "desc": "Cărți de vizită laminate pe două fețe" },
+      { "id": 2, "title": "Banner pentru magazin", "category": "banners", "desc": "3×2 m, tipar outdoor" },
+      { "id": 3, "title": "Broșuri școală", "category": "print", "desc": "A4, 4 pagini, 500 ex." },
+      { "id": 4, "title": "Identitate vizuală", "category": "design", "desc": "Logo + cărți de vizită + formulare" },
+      { "id": 5, "title": "Oracal pe vitrină", "category": "banners", "desc": "Aplicare full-color" },
+      { "id": 6, "title": "Pliante promoție", "category": "print", "desc": "A5, tiraj 2000" },
+      { "id": 7, "title": "Pânză pentru interior", "category": "print", "desc": "Tipar pe pânză 60×90" },
+      { "id": 8, "title": "Banner eveniment", "category": "banners", "desc": "Press-wall 4×2,5 m" }
+    ]
+  },
+  "about": {
+    "title": "Despre A&V Poligraf",
+    "history": "Tipografia A&V Poligraf SRL a fost fondată în 2008 în Comrat. De-a lungul a peste 15 ani am crescut de la un atelier mic la un complex poligrafic complet, deservind afaceri, administrații, școli și clienți privați din toată Găgăuzia și sudul Moldovei.",
+    "director": "Director: Anatoli Tomaili",
+    "whatWeDo": "Ce facem",
+    "whatWeDoText": "Tipar digital și de format mare, design, cărți de vizită, broșuri, pliante, bannere, oracal, fototapet, pânză, laminare, broșurare, rizograf — ciclu complet de poligrafie operativă.",
+    "equipment": "Echipament",
+    "equipmentText": "Echipament profesional de tipar și post-tipar permite realizarea comenzilor de orice complexitate — de la cărți de vizită unice până la tiraje mari și construcții de format mare.",
+    "whyUs": "De ce ne aleg",
+    "whyUsItems": [
+      "Prezență locală în Comrat",
+      "Viteza de execuție a comenzilor",
+      "Ciclu complet «design + tipar»",
+      "Prețuri corecte și termene transparente",
+      "Experiență din 2008"
+    ]
+  },
+  "contact": {
+    "title": "Contacte și solicitare",
+    "subtitle": "Lăsați o solicitare — vă contactăm în cel mai scurt timp",
+    "form": {
+      "name": "Nume",
+      "phone": "Telefon",
+      "email": "Email (opțional)",
+      "service": "Tipul serviciului",
+      "servicePlaceholder": "Selectați serviciul",
+      "description": "Descrierea sarcinii",
+      "deadline": "Termenul dorit",
+      "file": "Atașați fișier (machetă)",
+      "submit": "Trimite solicitarea",
+      "success": "Mulțumim! Vă contactăm în cel mai scurt timp.",
+      "required": "Câmp obligatoriu"
+    },
+    "info": {
+      "phones": "Telefoane",
+      "email": "Email",
+      "address": "Adresă",
+      "addressValue": "Comrat, UTA Găgăuzia, Moldova",
+      "hours": "Program",
+      "hoursValue": "Lu–Vi: 9:00–18:00, Sâ: 9:00–14:00",
+      "messengers": "Messenger"
+    }
+  },
+  "trust": {
+    "years": "ani de experiență",
+    "orders": "comenzi finalizate",
+    "clients": "clienți fideli"
+  },
+  "footer": {
+    "rights": "© 2008–2026 A&V Poligraf SRL. Toate drepturile rezervate.",
+    "tagline": "Tipografie cu ciclu complet în Comrat"
+  },
+  "common": {
+    "from": "de la",
+    "learnMore": "Află mai mult",
+    "close": "Închide"
+  }
+}
