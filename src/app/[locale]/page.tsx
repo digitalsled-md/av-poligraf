@@ -158,7 +158,7 @@ export default async function HomePage({
             {services.slice(0, 6).map((s) => (
               <Link
                 key={s.id}
-                href="/services"
+                href={`/services/${s.id}`}
                 className="group block bg-white rounded-2xl border border-slate-200 p-6 hover:border-[var(--color-accent)] hover:shadow-lg transition-all"
               >
                 <h3 className="text-lg font-semibold text-slate-900 group-hover:text-[var(--color-accent)] transition-colors">
