@@ -9,11 +9,17 @@ import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 
 const WEB3FORMS_KEY = "3f338095-3800-4822-b996-d7239b7bc3dd";
 const WHATSAPP_NUMBER = "37379955020";
+/** Web3Forms free plan rejects large multipart bodies ("Request Too Long"). */
+const MAX_FILE_BYTES = 1 * 1024 * 1024; // 1 MB
 
 const FALLBACK_ERROR_RU =
   "Не удалось отправить заявку. Напишите в WhatsApp или позвоните +373 79 955 020.";
 const FALLBACK_ERROR_RO =
   "Nu s-a putut trimite solicitarea. Scrieți pe WhatsApp sau sunați +373 79 955 020.";
+const FILE_TOO_BIG_RU =
+  "Файл больше 1 МБ. Сожмите макет или отправьте его в WhatsApp после заявки.";
+const FILE_TOO_BIG_RO =
+  "Fișierul depășește 1 MB. Comprimați macheta sau trimiteți-o pe WhatsApp după solicitare.";
 
 type FormData = {
   name: string;
@@ -81,6 +87,11 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
 
     try {
       const file = fileRef.current?.files?.[0];
+      if (file && file.size > MAX_FILE_BYTES) {
+        setError(locale === "ro" ? FILE_TOO_BIG_RO : FILE_TOO_BIG_RU);
+        setLoading(false);
+        return;
+      }
       const messageBody = [
         data.description,
         "",
@@ -343,9 +354,25 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
             <input
               ref={fileRef}
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.ai,.psd,.cdr,.zip"
+              accept=".pdf,.jpg,.jpeg,.png,.zip"
               className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[var(--color-accent)] hover:file:bg-orange-100"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f && f.size > MAX_FILE_BYTES) {
+                  setError(
+                    locale === "ro" ? FILE_TOO_BIG_RO : FILE_TOO_BIG_RU
+                  );
+                  e.target.value = "";
+                } else {
+                  setError(null);
+                }
+              }}
             />
+            <p className="mt-1.5 text-xs text-slate-500">
+              {locale === "ro"
+                ? "Max. 1 MB (PDF, JPG, PNG, ZIP). Fișiere mari — pe WhatsApp."
+                : "Макс. 1 МБ (PDF, JPG, PNG, ZIP). Крупные макеты — в WhatsApp."}
+            </p>
           </div>
         </>
       )}
