@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/layout/Logo";
 
 const locales = [
   { code: "ru", label: "RU" },
@@ -29,11 +30,7 @@ export default function Header() {
     <header className="sticky top-0 z-[100] w-full bg-white/95 backdrop-blur-md border-b border-slate-200 supports-[backdrop-filter]:bg-white/90">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-xl font-bold tracking-tight text-[var(--color-primary)]">
-              A&V <span className="text-[var(--color-accent)]">Poligraf</span>
-            </span>
-          </Link>
+          <Logo />
 
           <nav className="hidden md:flex items-center gap-1">
             {nav.map((item) => (
