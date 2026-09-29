@@ -67,12 +67,31 @@ export default async function HomePage({
     email: "avpoligraf@gmail.com",
     address: {
       "@type": "PostalAddress",
+      streetAddress: "Strada Lenin 192/8",
       addressLocality: "Comrat",
       addressRegion: "UTA Găgăuzia",
+      postalCode: "MD-3800",
       addressCountry: "MD",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 46.3014,
+      longitude: 28.6572,
+    },
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "09:00",
+      closes: "17:00",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.3",
+      bestRating: "5",
     },
     foundingDate: "2008",
     founder: { "@type": "Person", name: "Anatoli Tomaili" },
+    sameAs: ["https://maps.app.goo.gl/Z3qaFEzNdTTpVja17"],
   };
 
   return (
@@ -237,7 +256,14 @@ export default async function HomePage({
             >
               avpoligraf@gmail.com
             </a>
-            <span className="text-slate-500">Комрат · Гагаузия</span>
+            <a
+              href="https://maps.app.goo.gl/Z3qaFEzNdTTpVja17"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-500 hover:text-[var(--color-accent)]"
+            >
+              Strada Lenin 192/8, Комрат
+            </a>
           </div>
         </div>
       </section>
