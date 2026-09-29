@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import Logo from "@/components/layout/Logo";
 
 const SERVICE_SLUGS = [
   "business-cards",
@@ -33,11 +34,8 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="text-xl font-bold text-white">
-              A&V <span className="text-[var(--color-accent)]">Poligraf</span>
-            </Link>
+            <Logo variant="footer" />
             <p className="mt-3 text-sm text-slate-400">{t("tagline")}</p>
-            <p className="mt-4 text-sm">с 2008 · Комрат, Гагаузия</p>
             <p className="mt-2 text-xs text-slate-500">★ 4.3 на Google Maps</p>
           </div>
 
