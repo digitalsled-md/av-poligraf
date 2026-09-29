@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
@@ -17,6 +17,24 @@ export default function Header() {
   const locale = useLocale();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  // Close menus on route/locale change
+  useEffect(() => {
+    setOpen(false);
+    setLangOpen(false);
+  }, [pathname, locale]);
 
   const nav = [
     { href: "/", label: t("home") },
@@ -58,26 +76,48 @@ export default function Header() {
               <span className="hidden lg:inline">{t("phone")}</span>
             </a>
 
-            <div className="relative group">
-              <button className="flex items-center gap-1 px-2 py-1.5 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+            {/* Language switcher — click-based (works on mobile + desktop) */}
+            <div className="relative" ref={langRef}>
+              <button
+                type="button"
+                onClick={() => setLangOpen((v) => !v)}
+                aria-expanded={langOpen}
+                aria-haspopup="listbox"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium text-slate-700 rounded-lg border border-slate-200 hover:bg-slate-50 active:bg-slate-100"
+              >
                 {locale.toUpperCase()}
-                <ChevronDown className="h-3.5 w-3.5" />
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform",
+                    langOpen && "rotate-180"
+                  )}
+                />
               </button>
-              <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[80px]">
-                {locales.map((l) => (
-                  <Link
-                    key={l.code}
-                    href={pathname}
-                    locale={l.code}
-                    className={cn(
-                      "block px-3 py-1.5 text-sm hover:bg-slate-50",
-                      locale === l.code && "font-semibold text-[var(--color-primary)]"
-                    )}
-                  >
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
+              {langOpen && (
+                <div
+                  role="listbox"
+                  className="absolute right-0 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[88px]"
+                >
+                  {locales.map((l) => (
+                    <Link
+                      key={l.code}
+                      href={pathname}
+                      locale={l.code}
+                      role="option"
+                      aria-selected={locale === l.code}
+                      onClick={() => setLangOpen(false)}
+                      className={cn(
+                        "block px-3 py-2 text-sm hover:bg-slate-50",
+                        locale === l.code
+                          ? "font-semibold text-[var(--color-primary)] bg-slate-50"
+                          : "text-slate-700"
+                      )}
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Link
@@ -88,9 +128,11 @@ export default function Header() {
             </Link>
 
             <button
+              type="button"
               className="md:hidden p-2 rounded-lg hover:bg-slate-100"
               onClick={() => setOpen(!open)}
               aria-label="Menu"
+              aria-expanded={open}
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -116,6 +158,27 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+
+            {/* Language in mobile menu */}
+            <div className="flex gap-2 px-3 pt-3 pb-1">
+              {locales.map((l) => (
+                <Link
+                  key={l.code}
+                  href={pathname}
+                  locale={l.code}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "flex-1 text-center py-2.5 text-sm font-semibold rounded-lg border transition-colors",
+                    locale === l.code
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                      : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  )}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
