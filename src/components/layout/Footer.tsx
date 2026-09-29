@@ -4,15 +4,34 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
+const SERVICE_SLUGS = [
+  "business-cards",
+  "banners",
+  "flyers",
+  "design",
+  "laminating",
+  "canvas",
+] as const;
+
 export default function Footer() {
   const t = useTranslations("footer");
   const tNav = useTranslations("nav");
   const tContact = useTranslations("contact.info");
+  const tServices = useTranslations("services");
+  const serviceItems = tServices.raw("items") as { id: string; title: string }[];
+
+  const navLinks = [
+    { href: "/", label: tNav("home") },
+    { href: "/services", label: tNav("services") },
+    { href: "/portfolio", label: tNav("portfolio") },
+    { href: "/about", label: tNav("about") },
+    { href: "/contact", label: tNav("contact") },
+  ];
 
   return (
     <footer className="bg-[var(--color-primary-dark)] text-slate-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="text-xl font-bold text-white">
               A&V <span className="text-[var(--color-accent)]">Poligraf</span>
@@ -24,29 +43,41 @@ export default function Footer() {
 
           <div>
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              {tNav("services")}
+              {t("navTitle")}
             </h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/services" className="hover:text-white transition-colors">
-                  {tNav("services")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/portfolio" className="hover:text-white transition-colors">
-                  {tNav("portfolio")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-white transition-colors">
-                  {tNav("about")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
-                  {tNav("contact")}
-                </Link>
-              </li>
+              {navLinks.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="hover:text-white transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+              {t("servicesTitle")}
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {serviceItems
+                .filter((s) =>
+                  (SERVICE_SLUGS as readonly string[]).includes(s.id)
+                )
+                .map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      href={`/services/${s.id}`}
+                      className="hover:text-white transition-colors"
+                    >
+                      {s.title}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
 
@@ -69,7 +100,10 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
-                <a href="mailto:avpoligraf@gmail.com" className="hover:text-white">
+                <a
+                  href="mailto:avpoligraf@gmail.com"
+                  className="hover:text-white"
+                >
                   avpoligraf@gmail.com
                 </a>
               </li>

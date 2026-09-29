@@ -9,7 +9,7 @@ const WHATSAPP = "https://wa.me/37379955020?text=" + encodeURIComponent(
 
 export default function MobileFab() {
   return (
-    <div className="fixed bottom-5 right-4 z-50 flex flex-col gap-3 md:hidden">
+    <div className="fixed bottom-5 right-4 z-40 flex flex-col gap-3 md:hidden">
       <a
         href={WHATSAPP}
         target="_blank"
