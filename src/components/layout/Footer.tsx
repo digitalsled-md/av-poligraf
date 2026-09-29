@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
 export default function Footer() {
   const t = useTranslations("footer");
@@ -19,6 +19,7 @@ export default function Footer() {
             </Link>
             <p className="mt-3 text-sm text-slate-400">{t("tagline")}</p>
             <p className="mt-4 text-sm">с 2008 · Комрат, Гагаузия</p>
+            <p className="mt-2 text-xs text-slate-500">★ 4.3 на Google Maps</p>
           </div>
 
           <div>
@@ -57,9 +58,13 @@ export default function Footer() {
               <li className="flex items-start gap-2">
                 <Phone className="h-4 w-4 mt-0.5 shrink-0 text-[var(--color-accent)]" />
                 <div>
-                  <a href="tel:+37379955020" className="hover:text-white">+373 79 955 020</a>
+                  <a href="tel:+37379955020" className="hover:text-white">
+                    +373 79 955 020
+                  </a>
                   <br />
-                  <a href="tel:+37379033961" className="hover:text-white">+373 79 033 961</a>
+                  <a href="tel:+37379033961" className="hover:text-white">
+                    +373 79 033 961
+                  </a>
                 </div>
               </li>
               <li className="flex items-center gap-2">
@@ -70,14 +75,36 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-[var(--color-accent)]" />
-                <span>{tContact("addressValue")}</span>
+                <a
+                  href="https://maps.app.goo.gl/Z3qaFEzNdTTpVja17"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white"
+                >
+                  {tContact("addressValue")}
+                </a>
+              </li>
+              <li className="flex items-start gap-2">
+                <Clock className="h-4 w-4 mt-0.5 shrink-0 text-[var(--color-accent)]" />
+                <span>{tContact("hoursValue")}</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-slate-700 text-center text-sm text-slate-500">
-          {t("rights")}
+        <div className="mt-10 pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
+          <span>{t("rights")}</span>
+          <span>
+            {t("madeBy")}{" "}
+            <a
+              href="https://www.instagram.com/digitalsled.md/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-[var(--color-accent)] transition-colors"
+            >
+              Digital Sled
+            </a>
+          </span>
         </div>
       </div>
     </footer>
