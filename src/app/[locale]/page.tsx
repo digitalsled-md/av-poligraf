@@ -9,6 +9,7 @@ import {
   Layers,
   ArrowRight,
 } from "lucide-react";
+import Reviews from "@/components/home/Reviews";
 import ContactForm from "@/components/contact/ContactForm";
 
 const icons = [Clock, MapPin, Palette, Award, Calendar, Layers];
@@ -201,6 +202,8 @@ export default async function HomePage({
           </div>
         </div>
       </section>
+
+      <Reviews />
 
       <section className="py-16 bg-[var(--color-primary)] text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
