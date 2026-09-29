@@ -1,5 +1,4 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/routing";
 
 export async function generateMetadata({
   params,
@@ -45,12 +44,6 @@ export default async function PrivacyPage({
             </section>
           ))}
         </div>
-
-        <p className="mt-12 text-sm text-slate-500">
-          <Link href="/contact" className="text-[var(--color-accent)] hover:underline">
-            {t("backContact")}
-          </Link>
-        </p>
       </div>
     </div>
   );
