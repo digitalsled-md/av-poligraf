@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations, useLocale } from "next-intl";
@@ -16,12 +16,14 @@ type FormData = {
   service: string;
   description: string;
   deadline?: string;
+  hasLayout: "yes" | "no";
 };
 
 export default function ContactForm({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("contact.form");
   const tServices = useTranslations("services");
   const locale = useLocale();
+  const isRo = locale === "ro";
   const [success, setSuccess] = useState(false);
   const [lastWhatsApp, setLastWhatsApp] = useState<string | null>(null);
 
@@ -32,16 +34,23 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
     service: z.string().min(1, t("required")),
     description: z.string().min(5, t("required")),
     deadline: z.string().optional(),
+    hasLayout: z.enum(["yes", "no"], {
+      required_error: t("required"),
+    }),
   });
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { hasLayout: undefined },
   });
+
+  const hasLayout = useWatch({ control, name: "hasLayout" });
 
   const services = tServices.raw("items") as { id: string; title: string }[];
 
@@ -49,32 +58,34 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
     services.find((s) => s.id === id)?.title ?? id;
 
   const buildWhatsAppUrl = (data: FormData) => {
+    const layoutLine =
+      data.hasLayout === "yes"
+        ? isRo
+          ? "Machetă: am fișier — îl trimit în chat"
+          : "Макет: есть файл — пришлю в чат"
+        : isRo
+          ? "Machetă: nu am — am nevoie de design"
+          : "Макет: нет — нужен дизайн";
+
     const lines = [
-      locale === "ro"
+      isRo
         ? "Bună! Solicitare de pe site-ul A&V Poligraf."
         : "Здравствуйте! Заявка с сайта A&V Poligraf.",
-      locale === "ro" ? `Nume: ${data.name}` : `Имя: ${data.name}`,
-      locale === "ro" ? `Telefon: ${data.phone}` : `Телефон: ${data.phone}`,
-      data.email
-        ? locale === "ro"
-          ? `Email: ${data.email}`
-          : `Email: ${data.email}`
-        : null,
-      locale === "ro"
+      isRo ? `Nume: ${data.name}` : `Имя: ${data.name}`,
+      isRo ? `Telefon: ${data.phone}` : `Телефон: ${data.phone}`,
+      data.email ? `Email: ${data.email}` : null,
+      isRo
         ? `Serviciu: ${serviceTitle(data.service)}`
         : `Услуга: ${serviceTitle(data.service)}`,
       data.deadline
-        ? locale === "ro"
+        ? isRo
           ? `Termen: ${data.deadline}`
           : `Срок: ${data.deadline}`
         : null,
-      locale === "ro"
+      layoutLine,
+      isRo
         ? `Descriere: ${data.description}`
         : `Описание: ${data.description}`,
-      "",
-      locale === "ro"
-        ? "(Macheta o trimit în mesajul următor, dacă e nevoie.)"
-        : "(Макет пришлю следующим сообщением, если нужно.)",
     ].filter(Boolean);
 
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
@@ -95,14 +106,14 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
       <div className="text-center py-8 space-y-4">
         <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto" />
         <p className="text-lg font-medium text-slate-800">
-          {locale === "ro"
+          {isRo
             ? "Deschidem WhatsApp cu textul solicitării"
             : "Открываем WhatsApp с текстом заявки"}
         </p>
         <p className="text-sm text-slate-500 max-w-sm mx-auto">
-          {locale === "ro"
-            ? "Dacă fereastra nu s-a deschis, apăsați butonul de mai jos. Macheta o atașați în chat."
-            : "Если окно не открылось — нажмите кнопку ниже. Макет прикрепите уже в чате."}
+          {isRo
+            ? "Dacă chatul nu s-a deschis — apăsați butonul de mai jos."
+            : "Если чат не открылся — нажмите кнопку ниже."}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           {lastWhatsApp && (
@@ -229,30 +240,76 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
             {...register("deadline")}
             type="text"
             className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition"
-            placeholder={
-              locale === "ro" ? "de exemplu, 3 zile" : "например, 3 дня"
-            }
+            placeholder={isRo ? "de exemplu, 3 zile" : "например, 3 дня"}
           />
         </div>
       )}
 
-      <div className="rounded-lg border border-emerald-100 bg-emerald-50/80 px-3.5 py-3 text-sm text-slate-700">
-        <p className="font-medium text-emerald-800 mb-0.5">
-          {locale === "ro" ? "Fișier / machetă" : "Файл / макет"}
-        </p>
-        <p className="text-slate-600 leading-snug">
-          {locale === "ro"
-            ? "După trimitere se deschide WhatsApp. Atașați macheta în chat (📎) — prin formular fișierele nu se trimit."
-            : "После отправки откроется WhatsApp. Прикрепите макет в чате (📎) — через форму файлы не отправляются."}
-        </p>
-      </div>
+      <fieldset>
+        <legend className="block text-sm font-medium text-slate-700 mb-2">
+          {isRo ? "Aveți machetă gata?" : "Есть готовый макет?"} *
+        </legend>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label
+            className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-3 cursor-pointer transition ${
+              hasLayout === "yes"
+                ? "border-[var(--color-accent)] bg-orange-50/60 ring-1 ring-[var(--color-accent)]"
+                : "border-slate-300 hover:border-slate-400"
+            }`}
+          >
+            <input
+              type="radio"
+              value="yes"
+              {...register("hasLayout")}
+              className="accent-[var(--color-accent)]"
+            />
+            <span className="text-sm text-slate-800">
+              {isRo ? "Da, am fișier" : "Да, есть файл"}
+            </span>
+          </label>
+          <label
+            className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-3 cursor-pointer transition ${
+              hasLayout === "no"
+                ? "border-[var(--color-accent)] bg-orange-50/60 ring-1 ring-[var(--color-accent)]"
+                : "border-slate-300 hover:border-slate-400"
+            }`}
+          >
+            <input
+              type="radio"
+              value="no"
+              {...register("hasLayout")}
+              className="accent-[var(--color-accent)]"
+            />
+            <span className="text-sm text-slate-800">
+              {isRo ? "Nu, am nevoie de design" : "Нет, нужен дизайн"}
+            </span>
+          </label>
+        </div>
+        {errors.hasLayout && (
+          <p className="mt-1 text-xs text-red-500">{errors.hasLayout.message}</p>
+        )}
+        {hasLayout === "yes" && (
+          <p className="mt-2 text-xs text-slate-500 leading-snug">
+            {isRo
+              ? "După trimitere deschideți WhatsApp și atașați fișierul (📎) în chat."
+              : "После отправки откройте WhatsApp и прикрепите файл (📎) в чате."}
+          </p>
+        )}
+        {hasLayout === "no" && (
+          <p className="mt-2 text-xs text-slate-500 leading-snug">
+            {isRo
+              ? "Vom pregăti macheta — descrieți ideea mai sus sau în chat."
+              : "Подготовим макет — опишите идею выше или в чате."}
+          </p>
+        )}
+      </fieldset>
 
       <button
         type="submit"
         className="w-full flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-white bg-[#25D366] rounded-xl hover:brightness-110 transition-colors"
       >
         <MessageCircle className="h-5 w-5" />
-        {locale === "ro" ? "Trimite pe WhatsApp" : "Отправить в WhatsApp"}
+        {isRo ? "Trimite pe WhatsApp" : "Отправить в WhatsApp"}
       </button>
     </form>
   );
