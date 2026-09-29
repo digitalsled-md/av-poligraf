@@ -9,17 +9,11 @@ import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 
 const WEB3FORMS_KEY = "3f338095-3800-4822-b996-d7239b7bc3dd";
 const WHATSAPP_NUMBER = "37379955020";
-/** Web3Forms free plan rejects large multipart bodies ("Request Too Long"). */
-const MAX_FILE_BYTES = 1 * 1024 * 1024; // 1 MB
 
 const FALLBACK_ERROR_RU =
   "Не удалось отправить заявку. Напишите в WhatsApp или позвоните +373 79 955 020.";
 const FALLBACK_ERROR_RO =
   "Nu s-a putut trimite solicitarea. Scrieți pe WhatsApp sau sunați +373 79 955 020.";
-const FILE_TOO_BIG_RU =
-  "Файл больше 1 МБ. Сожмите макет или отправьте его в WhatsApp после заявки.";
-const FILE_TOO_BIG_RO =
-  "Fișierul depășește 1 MB. Comprimați macheta sau trimiteți-o pe WhatsApp după solicitare.";
 
 type FormData = {
   name: string;
@@ -54,6 +48,7 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastPayload, setLastPayload] = useState<FormData | null>(null);
+  const [hadFileAttached, setHadFileAttached] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fallbackError = locale === "ro" ? FALLBACK_ERROR_RO : FALLBACK_ERROR_RU;
@@ -86,12 +81,11 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
     setError(null);
 
     try {
+      // Free Web3Forms: file uploads are Pro-only.
+      // Form still allows picking a file; we note it in the email and nudge WhatsApp after success.
       const file = fileRef.current?.files?.[0];
-      if (file && file.size > MAX_FILE_BYTES) {
-        setError(locale === "ro" ? FILE_TOO_BIG_RO : FILE_TOO_BIG_RU);
-        setLoading(false);
-        return;
-      }
+      const hadFile = Boolean(file);
+
       const messageBody = [
         data.description,
         "",
@@ -99,60 +93,34 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
         data.email ? `Email: ${data.email}` : "",
         `Услуга: ${serviceTitle(data.service)}`,
         data.deadline ? `Срок: ${data.deadline}` : "",
+        hadFile
+          ? "Клиент выбрал файл макета — попросить прислать в WhatsApp"
+          : "",
         `Источник: av-poligraf.vercel.app (${locale})`,
       ]
         .filter(Boolean)
         .join("\n");
 
-      let res: Response;
-
-      if (file) {
-        const body = new FormData();
-        body.append("access_key", WEB3FORMS_KEY);
-        body.append(
-          "subject",
-          `Заявка A&V Poligraf — ${serviceTitle(data.service)}`
-        );
-        body.append("from_name", data.name);
-        body.append("name", data.name);
-        body.append("phone", data.phone);
-        if (data.email) {
-          body.append("email", data.email);
-          body.append("replyto", data.email);
-        } else {
-          body.append("email", "noreply@av-poligraf.vercel.app");
-        }
-        body.append("service", serviceTitle(data.service));
-        body.append("deadline", data.deadline || "—");
-        body.append("message", messageBody);
-        body.append("attachment", file);
-        body.append("botcheck", "");
-
-        res = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          body,
-        });
-      } else {
-        res = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            access_key: WEB3FORMS_KEY,
-            subject: `Заявка A&V Poligraf — ${serviceTitle(data.service)}`,
-            from_name: data.name,
-            name: data.name,
-            phone: data.phone,
-            email: data.email || "noreply@av-poligraf.vercel.app",
-            replyto: data.email || undefined,
-            service: serviceTitle(data.service),
-            deadline: data.deadline || "—",
-            message: messageBody,
-          }),
-        });
-      }
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: `Заявка A&V Poligraf — ${serviceTitle(data.service)}`,
+          from_name: data.name,
+          name: data.name,
+          phone: data.phone,
+          email: data.email || "noreply@av-poligraf.vercel.app",
+          replyto: data.email || undefined,
+          service: serviceTitle(data.service),
+          deadline: data.deadline || "—",
+          message: messageBody,
+          had_file: hadFile ? "yes" : "no",
+        }),
+      });
 
       const json = (await res.json().catch(() => ({}))) as {
         success?: boolean;
@@ -166,6 +134,7 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
       }
 
       setLastPayload(data);
+      setHadFileAttached(hadFile);
       setSuccess(true);
       reset();
       if (fileRef.current) fileRef.current.value = "";
@@ -200,6 +169,9 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
       `Услуга: ${serviceTitle(lastPayload.service)}`,
       lastPayload.deadline ? `Срок: ${lastPayload.deadline}` : null,
       `Описание: ${lastPayload.description}`,
+      hadFileAttached
+        ? "Макет приложу следующим сообщением."
+        : null,
     ]
       .filter(Boolean)
       .join("\n");
@@ -212,13 +184,17 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
         <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto" />
         <p className="text-lg font-medium text-slate-800">{t("success")}</p>
         <p className="text-sm text-slate-500">
-          {safeT(
-            t,
-            "successHint",
-            locale === "ro"
-              ? "Solicitarea a fost trimisă pe email. Puteți duplica pe WhatsApp."
-              : "Заявка отправлена на почту. Можно продублировать в WhatsApp."
-          )}
+          {hadFileAttached
+            ? locale === "ro"
+              ? "Solicitarea e pe email. Fișierul nu se trimite pe formă — atașați macheta în WhatsApp."
+              : "Заявка на почте. Файл через форму не уходит — прикрепите макет в WhatsApp."
+            : safeT(
+                t,
+                "successHint",
+                locale === "ro"
+                  ? "Solicitarea a fost trimisă pe email. Puteți duplica pe WhatsApp."
+                  : "Заявка отправлена на почту. Можно продублировать в WhatsApp."
+              )}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <a
@@ -228,13 +204,18 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-white font-medium text-sm hover:brightness-110"
           >
             <MessageCircle className="h-4 w-4" />
-            WhatsApp
+            {hadFileAttached
+              ? locale === "ro"
+                ? "Trimite macheta pe WhatsApp"
+                : "Отправить макет в WhatsApp"
+              : "WhatsApp"}
           </a>
           <button
             type="button"
             onClick={() => {
               setSuccess(false);
               setLastPayload(null);
+              setHadFileAttached(false);
             }}
             className="text-sm text-[var(--color-accent)] hover:underline px-3 py-2"
           >
@@ -354,24 +335,14 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
             <input
               ref={fileRef}
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.zip"
+              accept=".pdf,.jpg,.jpeg,.png,.ai,.psd,.cdr,.zip"
               className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[var(--color-accent)] hover:file:bg-orange-100"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f && f.size > MAX_FILE_BYTES) {
-                  setError(
-                    locale === "ro" ? FILE_TOO_BIG_RO : FILE_TOO_BIG_RU
-                  );
-                  e.target.value = "";
-                } else {
-                  setError(null);
-                }
-              }}
+              onChange={() => setError(null)}
             />
             <p className="mt-1.5 text-xs text-slate-500">
               {locale === "ro"
-                ? "Max. 1 MB (PDF, JPG, PNG, ZIP). Fișiere mari — pe WhatsApp."
-                : "Макс. 1 МБ (PDF, JPG, PNG, ZIP). Крупные макеты — в WhatsApp."}
+                ? "Opțional. Macheta o trimiteți pe WhatsApp după solicitare (fișierele nu pleacă pe email)."
+                : "Необязательно. Макет пришлите в WhatsApp после заявки (файлы на почту не уходят)."}
             </p>
           </div>
         </>
