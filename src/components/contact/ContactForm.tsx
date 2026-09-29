@@ -1,19 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations, useLocale } from "next-intl";
-import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
+import { CheckCircle2, MessageCircle } from "lucide-react";
 
-const WEB3FORMS_KEY = "3f338095-3800-4822-b996-d7239b7bc3dd";
 const WHATSAPP_NUMBER = "37379955020";
-
-const FALLBACK_ERROR_RU =
-  "Не удалось отправить заявку. Напишите в WhatsApp или позвоните +373 79 955 020.";
-const FALLBACK_ERROR_RO =
-  "Nu s-a putut trimite solicitarea. Scrieți pe WhatsApp sau sunați +373 79 955 020.";
 
 type FormData = {
   name: string;
@@ -24,34 +18,12 @@ type FormData = {
   deadline?: string;
 };
 
-function safeT(
-  t: (key: string) => string,
-  key: string,
-  fallback: string
-): string {
-  try {
-    const value = t(key);
-    if (!value || value === key || value.includes("contact.form.")) {
-      return fallback;
-    }
-    return value;
-  } catch {
-    return fallback;
-  }
-}
-
 export default function ContactForm({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("contact.form");
   const tServices = useTranslations("services");
   const locale = useLocale();
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastPayload, setLastPayload] = useState<FormData | null>(null);
-  const [hadFileAttached, setHadFileAttached] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const fallbackError = locale === "ro" ? FALLBACK_ERROR_RO : FALLBACK_ERROR_RU;
+  const [lastWhatsApp, setLastWhatsApp] = useState<string | null>(null);
 
   const schema = z.object({
     name: z.string().min(2, t("required")),
@@ -76,146 +48,79 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
   const serviceTitle = (id: string) =>
     services.find((s) => s.id === id)?.title ?? id;
 
-  const onSubmit = async (data: FormData) => {
-    setLoading(true);
-    setError(null);
+  const buildWhatsAppUrl = (data: FormData) => {
+    const lines = [
+      locale === "ro"
+        ? "Bună! Solicitare de pe site-ul A&V Poligraf."
+        : "Здравствуйте! Заявка с сайта A&V Poligraf.",
+      locale === "ro" ? `Nume: ${data.name}` : `Имя: ${data.name}`,
+      locale === "ro" ? `Telefon: ${data.phone}` : `Телефон: ${data.phone}`,
+      data.email
+        ? locale === "ro"
+          ? `Email: ${data.email}`
+          : `Email: ${data.email}`
+        : null,
+      locale === "ro"
+        ? `Serviciu: ${serviceTitle(data.service)}`
+        : `Услуга: ${serviceTitle(data.service)}`,
+      data.deadline
+        ? locale === "ro"
+          ? `Termen: ${data.deadline}`
+          : `Срок: ${data.deadline}`
+        : null,
+      locale === "ro"
+        ? `Descriere: ${data.description}`
+        : `Описание: ${data.description}`,
+      "",
+      locale === "ro"
+        ? "(Macheta o trimit în mesajul următor, dacă e nevoie.)"
+        : "(Макет пришлю следующим сообщением, если нужно.)",
+    ].filter(Boolean);
 
-    try {
-      // Free Web3Forms: file uploads are Pro-only.
-      // Form still allows picking a file; we note it in the email and nudge WhatsApp after success.
-      const file = fileRef.current?.files?.[0];
-      const hadFile = Boolean(file);
-
-      const messageBody = [
-        data.description,
-        "",
-        `Телефон: ${data.phone}`,
-        data.email ? `Email: ${data.email}` : "",
-        `Услуга: ${serviceTitle(data.service)}`,
-        data.deadline ? `Срок: ${data.deadline}` : "",
-        hadFile
-          ? "Клиент выбрал файл макета — попросить прислать в WhatsApp"
-          : "",
-        `Источник: av-poligraf.vercel.app (${locale})`,
-      ]
-        .filter(Boolean)
-        .join("\n");
-
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          subject: `Заявка A&V Poligraf — ${serviceTitle(data.service)}`,
-          from_name: data.name,
-          name: data.name,
-          phone: data.phone,
-          email: data.email || "noreply@av-poligraf.vercel.app",
-          replyto: data.email || undefined,
-          service: serviceTitle(data.service),
-          deadline: data.deadline || "—",
-          message: messageBody,
-          had_file: hadFile ? "yes" : "no",
-        }),
-      });
-
-      const json = (await res.json().catch(() => ({}))) as {
-        success?: boolean;
-        message?: string;
-      };
-
-      if (!res.ok || !json.success) {
-        const apiMsg = json.message || `HTTP ${res.status}`;
-        console.error("Web3Forms error:", apiMsg, json);
-        throw new Error(apiMsg);
-      }
-
-      setLastPayload(data);
-      setHadFileAttached(hadFile);
-      setSuccess(true);
-      reset();
-      if (fileRef.current) fileRef.current.value = "";
-    } catch (e) {
-      console.error(e);
-      const msg = e instanceof Error ? e.message : "";
-      const base = safeT(t, "error", fallbackError);
-      if (
-        msg &&
-        !msg.includes("Failed to fetch") &&
-        !msg.includes("Submit failed") &&
-        msg.length < 120
-      ) {
-        setError(`${base} (${msg})`);
-      } else {
-        setError(base);
-      }
-    } finally {
-      setLoading(false);
-    }
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+      lines.join("\n")
+    )}`;
   };
 
-  const whatsappHref = () => {
-    if (!lastPayload) {
-      return `https://wa.me/${WHATSAPP_NUMBER}`;
-    }
-    const text = [
-      "Здравствуйте! Заявка с сайта A&V Poligraf.",
-      `Имя: ${lastPayload.name}`,
-      `Телефон: ${lastPayload.phone}`,
-      lastPayload.email ? `Email: ${lastPayload.email}` : null,
-      `Услуга: ${serviceTitle(lastPayload.service)}`,
-      lastPayload.deadline ? `Срок: ${lastPayload.deadline}` : null,
-      `Описание: ${lastPayload.description}`,
-      hadFileAttached
-        ? "Макет приложу следующим сообщением."
-        : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  const onSubmit = (data: FormData) => {
+    const url = buildWhatsAppUrl(data);
+    setLastWhatsApp(url);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setSuccess(true);
+    reset();
   };
 
   if (success) {
     return (
       <div className="text-center py-8 space-y-4">
         <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto" />
-        <p className="text-lg font-medium text-slate-800">{t("success")}</p>
-        <p className="text-sm text-slate-500">
-          {hadFileAttached
-            ? locale === "ro"
-              ? "Solicitarea e pe email. Fișierul nu se trimite pe formă — atașați macheta în WhatsApp."
-              : "Заявка на почте. Файл через форму не уходит — прикрепите макет в WhatsApp."
-            : safeT(
-                t,
-                "successHint",
-                locale === "ro"
-                  ? "Solicitarea a fost trimisă pe email. Puteți duplica pe WhatsApp."
-                  : "Заявка отправлена на почту. Можно продублировать в WhatsApp."
-              )}
+        <p className="text-lg font-medium text-slate-800">
+          {locale === "ro"
+            ? "Deschidem WhatsApp cu textul solicitării"
+            : "Открываем WhatsApp с текстом заявки"}
+        </p>
+        <p className="text-sm text-slate-500 max-w-sm mx-auto">
+          {locale === "ro"
+            ? "Dacă fereastra nu s-a deschis, apăsați butonul de mai jos. Macheta o atașați în chat."
+            : "Если окно не открылось — нажмите кнопку ниже. Макет прикрепите уже в чате."}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <a
-            href={whatsappHref()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-white font-medium text-sm hover:brightness-110"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {hadFileAttached
-              ? locale === "ro"
-                ? "Trimite macheta pe WhatsApp"
-                : "Отправить макет в WhatsApp"
-              : "WhatsApp"}
-          </a>
+          {lastWhatsApp && (
+            <a
+              href={lastWhatsApp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-white font-medium text-sm hover:brightness-110"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </a>
+          )}
           <button
             type="button"
             onClick={() => {
               setSuccess(false);
-              setLastPayload(null);
-              setHadFileAttached(false);
+              setLastWhatsApp(null);
             }}
             className="text-sm text-[var(--color-accent)] hover:underline px-3 py-2"
           >
@@ -316,57 +221,38 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
       </div>
 
       {!compact && (
-        <>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t("deadline")}
-            </label>
-            <input
-              {...register("deadline")}
-              type="text"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition"
-              placeholder="например, 3 дня"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t("file")}
-            </label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.ai,.psd,.cdr,.zip"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-[var(--color-accent)] hover:file:bg-orange-100"
-              onChange={() => setError(null)}
-            />
-            <p className="mt-1.5 text-xs text-slate-500">
-              {locale === "ro"
-                ? "Opțional. Macheta o trimiteți pe WhatsApp după solicitare (fișierele nu pleacă pe email)."
-                : "Необязательно. Макет пришлите в WhatsApp после заявки (файлы на почту не уходят)."}
-            </p>
-          </div>
-        </>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            {t("deadline")}
+          </label>
+          <input
+            {...register("deadline")}
+            type="text"
+            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent outline-none transition"
+            placeholder={
+              locale === "ro" ? "de exemplu, 3 zile" : "например, 3 дня"
+            }
+          />
+        </div>
       )}
 
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-          {error}
+      <div className="rounded-lg border border-emerald-100 bg-emerald-50/80 px-3.5 py-3 text-sm text-slate-700">
+        <p className="font-medium text-emerald-800 mb-0.5">
+          {locale === "ro" ? "Fișier / machetă" : "Файл / макет"}
         </p>
-      )}
+        <p className="text-slate-600 leading-snug">
+          {locale === "ro"
+            ? "După trimitere se deschide WhatsApp. Atașați macheta în chat (📎) — prin formular fișierele nu se trimit."
+            : "После отправки откроется WhatsApp. Прикрепите макет в чате (📎) — через форму файлы не отправляются."}
+        </p>
+      </div>
 
       <button
         type="submit"
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-white bg-[var(--color-accent)] rounded-xl hover:bg-[var(--color-accent-hover)] disabled:opacity-70 transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-white bg-[#25D366] rounded-xl hover:brightness-110 transition-colors"
       >
-        {loading ? (
-          <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            ...
-          </>
-        ) : (
-          t("submit")
-        )}
+        <MessageCircle className="h-5 w-5" />
+        {locale === "ro" ? "Trimite pe WhatsApp" : "Отправить в WhatsApp"}
       </button>
     </form>
   );
