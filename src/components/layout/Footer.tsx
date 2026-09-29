@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import Logo from "@/components/layout/Logo";
@@ -19,6 +19,8 @@ export default function Footer() {
   const tNav = useTranslations("nav");
   const tContact = useTranslations("contact.info");
   const tServices = useTranslations("services");
+  const locale = useLocale();
+  const isRo = locale === "ro";
   const serviceItems = tServices.raw("items") as { id: string; title: string }[];
 
   const navLinks = [
@@ -27,6 +29,10 @@ export default function Footer() {
     { href: "/portfolio", label: tNav("portfolio") },
     { href: "/about", label: tNav("about") },
     { href: "/contact", label: tNav("contact") },
+    {
+      href: "/privacy",
+      label: isRo ? "Politica de confidențialitate" : "Политика конфиденциальности",
+    },
   ];
 
   return (
@@ -125,7 +131,15 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
-          <span>{t("rights")}</span>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <span>{t("rights")}</span>
+            <Link
+              href="/privacy"
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              {isRo ? "Politica de confidențialitate" : "Политика конфиденциальности"}
+            </Link>
+          </div>
           <span>
             {t("madeBy")}{" "}
             <a
