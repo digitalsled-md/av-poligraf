@@ -4,12 +4,16 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 
 const WEB3FORMS_KEY = "3f338095-3800-4822-b996-d7239b7bc3dd";
-const NOTIFY_EMAIL = "sled.admin@gmail.com";
 const WHATSAPP_NUMBER = "37379955020";
+
+const FALLBACK_ERROR_RU =
+  "Не удалось отправить заявку. Напишите в WhatsApp или позвоните +373 79 955 020.";
+const FALLBACK_ERROR_RO =
+  "Nu s-a putut trimite solicitarea. Scrieți pe WhatsApp sau sunați +373 79 955 020.";
 
 type FormData = {
   name: string;
@@ -20,14 +24,33 @@ type FormData = {
   deadline?: string;
 };
 
+function safeT(
+  t: (key: string) => string,
+  key: string,
+  fallback: string
+): string {
+  try {
+    const value = t(key);
+    if (!value || value === key || value.includes("contact.form.")) {
+      return fallback;
+    }
+    return value;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function ContactForm({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("contact.form");
   const tServices = useTranslations("services");
+  const locale = useLocale();
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastPayload, setLastPayload] = useState<FormData | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const fallbackError = locale === "ro" ? FALLBACK_ERROR_RO : FALLBACK_ERROR_RU;
 
   const schema = z.object({
     name: z.string().min(2, t("required")),
@@ -57,48 +80,78 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
     setError(null);
 
     try {
-      const body = new FormData();
-      body.append("access_key", WEB3FORMS_KEY);
-      body.append("subject", `Заявка A&V Poligraf — ${serviceTitle(data.service)}`);
-      body.append("from_name", data.name);
-      body.append("name", data.name);
-      body.append("phone", data.phone);
-      if (data.email) {
-        body.append("email", data.email);
-        body.append("replyto", data.email);
-      }
-      body.append("service", serviceTitle(data.service));
-      body.append("deadline", data.deadline || "—");
-      body.append(
-        "message",
-        [
-          data.description,
-          "",
-          `Телефон: ${data.phone}`,
-          data.email ? `Email: ${data.email}` : "",
-          `Услуга: ${serviceTitle(data.service)}`,
-          data.deadline ? `Срок: ${data.deadline}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n")
-      );
-      body.append("to_email_note", NOTIFY_EMAIL);
-      body.append("botcheck", "");
-
       const file = fileRef.current?.files?.[0];
+      const messageBody = [
+        data.description,
+        "",
+        `Телефон: ${data.phone}`,
+        data.email ? `Email: ${data.email}` : "",
+        `Услуга: ${serviceTitle(data.service)}`,
+        data.deadline ? `Срок: ${data.deadline}` : "",
+        `Источник: av-poligraf.vercel.app (${locale})`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      let res: Response;
+
       if (file) {
+        const body = new FormData();
+        body.append("access_key", WEB3FORMS_KEY);
+        body.append(
+          "subject",
+          `Заявка A&V Poligraf — ${serviceTitle(data.service)}`
+        );
+        body.append("from_name", data.name);
+        body.append("name", data.name);
+        body.append("phone", data.phone);
+        if (data.email) {
+          body.append("email", data.email);
+          body.append("replyto", data.email);
+        } else {
+          body.append("email", "noreply@av-poligraf.vercel.app");
+        }
+        body.append("service", serviceTitle(data.service));
+        body.append("deadline", data.deadline || "—");
+        body.append("message", messageBody);
         body.append("attachment", file);
+        body.append("botcheck", "");
+
+        res = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          body,
+        });
+      } else {
+        res = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: `Заявка A&V Poligraf — ${serviceTitle(data.service)}`,
+            from_name: data.name,
+            name: data.name,
+            phone: data.phone,
+            email: data.email || "noreply@av-poligraf.vercel.app",
+            replyto: data.email || undefined,
+            service: serviceTitle(data.service),
+            deadline: data.deadline || "—",
+            message: messageBody,
+          }),
+        });
       }
 
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        body,
-      });
-
-      const json = (await res.json()) as { success?: boolean; message?: string };
+      const json = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        message?: string;
+      };
 
       if (!res.ok || !json.success) {
-        throw new Error(json.message || "Submit failed");
+        const apiMsg = json.message || `HTTP ${res.status}`;
+        console.error("Web3Forms error:", apiMsg, json);
+        throw new Error(apiMsg);
       }
 
       setLastPayload(data);
@@ -107,10 +160,18 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
       if (fileRef.current) fileRef.current.value = "";
     } catch (e) {
       console.error(e);
-      setError(
-        t("error") ||
-          "Не удалось отправить. Попробуйте WhatsApp или позвоните."
-      );
+      const msg = e instanceof Error ? e.message : "";
+      const base = safeT(t, "error", fallbackError);
+      if (
+        msg &&
+        !msg.includes("Failed to fetch") &&
+        !msg.includes("Submit failed") &&
+        msg.length < 120
+      ) {
+        setError(`${base} (${msg})`);
+      } else {
+        setError(base);
+      }
     } finally {
       setLoading(false);
     }
@@ -140,8 +201,13 @@ export default function ContactForm({ compact = false }: { compact?: boolean }) 
         <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto" />
         <p className="text-lg font-medium text-slate-800">{t("success")}</p>
         <p className="text-sm text-slate-500">
-          {t("successHint") ||
-            "Мы получили заявку. При необходимости продублируйте в WhatsApp."}
+          {safeT(
+            t,
+            "successHint",
+            locale === "ro"
+              ? "Solicitarea a fost trimisă pe email. Puteți duplica pe WhatsApp."
+              : "Заявка отправлена на почту. Можно продублировать в WhatsApp."
+          )}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <a
