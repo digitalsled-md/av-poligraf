@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { images } from "@/lib/images";
 
 const categories = ["all", "cards", "banners", "print", "design"] as const;
 
 export default function PortfolioPage() {
   const t = useTranslations("portfolio");
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<(typeof categories)[number]>("all");
   const items = t.raw("items") as {
     id: number;
     title: string;
@@ -17,17 +19,6 @@ export default function PortfolioPage() {
 
   const filtered =
     filter === "all" ? items : items.filter((i) => i.category === filter);
-
-  const colors = [
-    "from-blue-500 to-blue-700",
-    "from-orange-400 to-orange-600",
-    "from-emerald-500 to-emerald-700",
-    "from-violet-500 to-violet-700",
-    "from-rose-400 to-rose-600",
-    "from-cyan-500 to-cyan-700",
-    "from-amber-400 to-amber-600",
-    "from-indigo-500 to-indigo-700",
-  ];
 
   return (
     <div className="py-12 sm:py-16">
@@ -59,14 +50,19 @@ export default function PortfolioPage() {
           {filtered.map((item, i) => (
             <div
               key={item.id}
-              className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer"
+              className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow"
             >
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${colors[i % colors.length]} opacity-90 group-hover:opacity-100 transition-opacity`}
+              <Image
+                src={images.portfolio[i % images.portfolio.length]}
+                alt={item.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-0 flex flex-col justify-end p-5 text-white">
                 <h3 className="font-semibold text-lg">{item.title}</h3>
-                <p className="text-sm text-white/80 mt-1">{item.desc}</p>
+                <p className="text-sm text-white/85 mt-1">{item.desc}</p>
               </div>
             </div>
           ))}
